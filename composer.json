@@ -1,0 +1,20 @@
+{
+    "name": "apanaj/client-optimager"
+    , "description": "Client For Image Optimizer Service."
+    , "type"       : "library"
+    , "authors": [
+        {
+            "name": "Payam Naderi"
+            , "email": "naderi.payam@gmail.com"
+            , "role": "Developer"
+        }
+    ]
+    , "require": {
+      "poirot/api-client": "dev-devel"
+    }
+    , "autoload"  : {
+        "psr-4": {
+            "Apanaj\\Optimager\\": "src/"
+        }
+    }
+}
