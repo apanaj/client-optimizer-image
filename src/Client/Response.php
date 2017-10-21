@@ -1,8 +1,8 @@
 <?php
 namespace Apanaj\Optimager\Client;
 
+use Apanaj\Optimager\Exceptions\exServerError;
 use Poirot\ApiClient\ResponseOfClient;
-use Poirot\TenderBinClient\Exceptions\exServerError;
 
 
 class Response
@@ -43,7 +43,7 @@ class Response
 
     function _getDataParser()
     {
-        if ( false !== strpos($this->getMeta('content_type'), 'image') )
+        if (is_resource($this->rawBody))
             // Retrieve Json Parsed Data Result
             return function () {
                 return $this->rawBody;

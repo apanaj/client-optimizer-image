@@ -40,13 +40,6 @@ class PlatformRest
         $args    = iterator_to_array($command);
 
         if ( isset($args['file']) ) {
-            // TODO post stream as file
-            if (! is_resource($args['file']) )
-                throw new \Exception('given argument for file must be stream.');
-
-            // TODO For now convert stream that considered file into uri and post content with curl
-            $fMeta = stream_get_meta_data($args['file']);
-            $args['file'] = new \CURLFile( $fMeta['uri'], mime_content_type($fMeta['uri']) );
             $method = 'POST';
         }
 
@@ -106,17 +99,31 @@ class PlatformRest
         }
 
         if ($method === 'POST') {
+            $content  = new StreamBodyMultiPart;
+            $stream   = new ResourceStream($data['file']);
+            $filename = basename($stream->meta()->getUri());
+
+            $content->addElement(
+                'file'
+                , new Streamable($stream)
+                , [
+                    'Content-Disposition' => 'form-data; name="file"; filename="'.$filename.'"',
+                    'Content-Type'        => 'image/jpeg',
+                ]
+            );
+
+            $content->addElementDone();
+
             $headers = isset($opts['header']) ? $opts['header'] : [];
             $headers += [
-                'Content-Type: multipart/form-data',
+                'Content-Type: multipart/form-data; boundary='.$content->getBoundary(),
             ];
 
-            $content = new StreamBodyMultiPart;
-            $stream  = new ResourceStream($data['file']);
-            $content->addElement('file', new Streamable($stream));
-
             $opts['header']  = $headers;
-            $opts['content'] = $content;
+            $opts['content'] = $content->read();
+
+            unset($data['file']);
+            $url .= '?'.http_build_query($data);
         }
 
         if ($method === 'GET') {
@@ -133,15 +140,9 @@ class PlatformRest
             $code      = 400;
             $exception = new exHttpResponse('Error While Retrieve Resource', $code);
         }
-
         if ( $ex = ErrorStack::handleDone() )
             throw $ex;
 
-
-        $data   = stream_get_contents($file);
-        header('Content-Type: image/jpeg');
-        echo ($data);
-        die;
 
         $response = new Response(
             $response

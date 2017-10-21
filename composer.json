@@ -11,6 +11,7 @@
     ]
     , "require": {
       "poirot/api-client": "dev-devel"
+      , "poirot/http": "dev-devel"
     }
     , "autoload"  : {
         "psr-4": {
