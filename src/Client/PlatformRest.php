@@ -9,8 +9,11 @@ use Poirot\ApiClient\Interfaces\Request\iApiCommand;
 use Poirot\ApiClient\Interfaces\Response\iResponse;
 use Poirot\Http\HttpMessage\Request\StreamBodyMultiPart;
 use Poirot\Std\ErrorStack;
+use Poirot\Stream\Interfaces\iStreamable;
+use Poirot\Stream\Psr\StreamBridgeFromPsr;
 use Poirot\Stream\ResourceStream;
 use Poirot\Stream\Streamable;
+use Psr\Http\Message\StreamInterface;
 
 
 class PlatformRest
@@ -100,12 +103,16 @@ class PlatformRest
 
         if ($method === 'POST') {
             $content  = new StreamBodyMultiPart;
-            $stream   = new ResourceStream($data['file']);
-            $filename = basename($stream->meta()->getUri());
+            $resource = $data['file'];
+            $stream   = $this->_makeStreamFromGivenResource($resource);
+
+            $filename = basename( $stream->resource()->meta()->getUri() );
+            if ('' === $ext = pathinfo($filename, PATHINFO_EXTENSION))
+                $filename = uniqid().'.jpg';
 
             $content->addElement(
                 'file'
-                , new Streamable($stream)
+                , $stream
                 , [
                     'Content-Disposition' => 'form-data; name="file"; filename="'.$filename.'"',
                     'Content-Type'        => 'image/jpeg',
@@ -154,4 +161,30 @@ class PlatformRest
         return $response;
     }
 
+    // ..
+
+    function _makeStreamFromGivenResource($resource)
+    {
+        if ( is_resource($resource) ) {
+            $resource = new ResourceStream($resource);
+            $resource = new Streamable($resource);
+        }
+
+        if ($resource instanceof StreamInterface)
+            $resource = new StreamBridgeFromPsr($resource);
+
+        if (! $resource instanceof iStreamable)
+            throw new \Exception(sprintf(
+                'Invalid resource (%s) given for optimize.'
+                , gettype($resource)
+            ));
+
+
+        ## Rewind Resource:
+        #
+        if ( $resource->resource()->isSeekable() )
+            $resource->rewind();
+
+        return $resource;
+    }
 }

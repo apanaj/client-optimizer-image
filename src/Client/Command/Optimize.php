@@ -4,6 +4,8 @@ namespace Apanaj\Optimager\Client\Command;
 use Poirot\ApiClient\Interfaces\Request\iApiCommand;
 use Poirot\ApiClient\Request\tCommandHelper;
 use Poirot\Std\Hydrator\HydrateGetters;
+use Poirot\Stream\Interfaces\iStreamable;
+use Psr\Http\Message\StreamInterface;
 
 
 class Optimize
@@ -52,7 +54,7 @@ class Optimize
     /**
      * Optimize Image From Stream
      *
-     * @param resource $stream
+     * @param resource|iStreamable|StreamInterface $stream
      *
      * @return $this
      */
@@ -64,25 +66,47 @@ class Optimize
 
     function crop($width, $height)
     {
-        $this->type = 'crop';
-        $this->size = $width.'x'.$height;
+        $this->type('crop');
+        $this->size($width, $height);
 
         return $this;
     }
 
     function resize($width, $height)
     {
-        $this->type = 'resize';
-        $this->size = $width.'x'.$height;
+        $this->type('resize');
+        $this->size($width, $height);
 
         return $this;
     }
 
     function resizeForce($width, $height)
     {
-        $this->type = 'force_resize';
-        $this->size = $width.'x'.$height;
+        $this->type('force_resize');
+        $this->size($width, $height);
 
+        return $this;
+    }
+
+    /**
+     * @param $type
+     * @return $this
+     */
+    function type($type)
+    {
+        $this->type = (string) $type;
+        return $this;
+    }
+
+    function size($width, $height = null)
+    {
+        if (! $height ) {
+            // 90x90
+            $this->size = (string) $width;
+            return $this;
+        }
+
+        $this->size = $width.'x'.$height;
         return $this;
     }
 
