@@ -63,7 +63,7 @@ class Client
      *
      * @param Optimize $command
      *
-     * @return resource
+     * @return Response
      */
     function optimize(Optimize $command)
     {
@@ -71,7 +71,7 @@ class Client
         if ( $ex = $response->hasException() )
             throw $ex;
 
-        return $response->expected();
+        return $response;
     }
 
 

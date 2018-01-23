@@ -151,10 +151,23 @@ class PlatformRest
             throw $ex;
 
 
+
+        $headers = [];
+        $responseHeaders = $http_response_header;
+        foreach ($responseHeaders as $h) {
+            try {
+                $h = \Poirot\Http\Header\splitLabelValue($h);
+            } catch (\Exception $e) {
+                continue;
+            }
+
+            $headers+=$h;
+        }
+
         $response = new Response(
             $response
             , $code
-            , []
+            , $headers // header responses
             , $exception
         );
 
